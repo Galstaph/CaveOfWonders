@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>CaveOfWonders</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<variableList>
+		<variable>
+			<name>CLASSPATH</name>
+			<value>file:/C:/Program%20Files%20(x86)/Microsoft%20JDBC%20Driver%204.0%20for%20SQL%20Server/sqljdbc_4.0/enu/sqljdbc4.jar</value>
+		</variable>
+	</variableList>
+</projectDescription>

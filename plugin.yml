@@ -1,0 +1,44 @@
+name: CaveOfWonders
+main: com.github.galstaph.CaveOfWonders
+version: 0.1
+commands:
+   ListPortals:
+      description: List all Portals.
+      usage: /ListPortals
+      permission: CaveOfWonders.ListPortal
+      permission-message: You don't have ListPortal permissions
+   SendPlayer:
+      description: Sends a player to coordinates.
+      usage: /SendPlayer X Y Z [PlayerName]
+      permission: CaveOfWonders.SendPlayer
+      permission-message: You don't have SendPlayer permissions
+   SendToPortal:
+      description: Send a player to Portal.
+      usage: /SendToPortal PortalName [PlayerName]
+      permission: CaveOfWonders.SendToPortal
+      permission-message: You don't have SendToPortal permissions
+   AddPortal:
+      description: Add a Portal to the World.
+      usage: /AddPortal PortalName [X] [Y] [Z] [Destination]
+      permission: CaveOfWonders.AddPortal
+      permission-message: You don't have AddPortal permissions
+   RemovePortal:
+      description: Remove a Portal.
+      usage: /RemovePortal PortalName
+      permission: CaveOfWonders.RemovePortal
+      permission-message: You don't have RemovePortal permissions
+   SetDestination:
+      description: Set a Portal Destination.
+      usage: /SetDestination StartPortal EndPortal
+      permission: CaveOfWonders.SetDestination
+      permission-message: You don't have SetDestination permissions
+   PortalInformation:
+      description: Gets a Portals Info.
+      usage: /PortalInformation PortalName
+      permission: CaveOfWonders.PortalInformation
+      permission-message: You don't have PortalInformation permissions
+   UpdateLoginMessage:
+      description: Sets new login message
+      usage: /UpdateLoginMessage [NewMessage]
+      permission: CaveOfWonders.UpdateLoginMessage
+      permission-message: You don't have UpdateLoginMessage permissions
