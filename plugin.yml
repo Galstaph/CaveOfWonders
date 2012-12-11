@@ -42,3 +42,28 @@ commands:
       usage: /UpdateLoginMessage [NewMessage]
       permission: CaveOfWonders.UpdateLoginMessage
       permission-message: You don't have UpdateLoginMessage permissions
+   HidePortal:
+      description: Shows portal to Ops only
+      usage: /HidePortal [PortalName]
+      permission: CaveOfWonders.HidePortal
+      permission-message: You don't have HidePortal permissions
+   UnHidePortal:
+      description: Shows portal to everyone
+      usage: /UnHidePortal [PortalName]
+      permission: CaveOfWonders.UnHidePortal
+      permission-message: You don't have UnHidePortal permissions
+   afk:
+      description: Changes AFK status
+      usage: /afk
+      permission: CaveOfWonders.afk
+      permission-message: You don't have afk permissions
+   who:
+      description: List Players Logged in (and out)
+      usage: /who [ShowAll]
+      permission: CaveOfWonders.who
+      permission-message: You don't have who permissions
+   status:
+      description: Shows a specific status
+      usage: /status Status message
+      permission: CaveOfWonders.Status
+      permission-message: You don't have Status permissions          

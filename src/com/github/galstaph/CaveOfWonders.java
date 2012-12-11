@@ -1,8 +1,6 @@
 package com.github.galstaph;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,23 +16,25 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 import java.util.Scanner;
 
-public final class CaveOfWonders extends JavaPlugin implements Listener {
+public class CaveOfWonders extends JavaPlugin implements Listener {
 	
 	final static String FILE_NAME = System.getProperty("user.dir") + "\\plugins\\CoWPortals.ini";
 	final static String ConfigFile = System.getProperty("user.dir") + "\\plugins\\CoWConfiguration.ini";
+	final static String PlayerFile = System.getProperty("user.dir") + "\\plugins\\CoWPlayerInfo.ini";
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 	
-	HashMap<String, String> PlayerDestination;
+	protected static HashMap<String, String> PlayerDestination;
 	
-	HashMap<String, String> CoWConfig; 
+	protected static HashMap<Integer,String[]> PlayerStatus;
 	
-	HashMap<Integer, String[]> Portals;
+	protected static HashMap<String, String> CoWConfig; 
+	
+	protected static HashMap<Integer, String[]> Portals;
 	
 	@Override public void onEnable(){
         // TODO Insert logic to be performed when the plugin is enabled
@@ -69,6 +69,27 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 	    } catch (IOException e) {
 			e.printStackTrace();
 		}
+	    
+	    PlayerStatus = new LinkedHashMap<Integer, String[]>();
+	    try (Scanner scanner = new Scanner(Paths.get(PlayerFile), ENCODING.name()))
+	    {
+	    	int PlayerId = -1;
+	    	while (scanner.hasNextLine())
+	    	{
+	    		PlayerId++;
+	    		String[] readPlayer = scanner.nextLine().split("~");
+	    		String[] PlayerInfo = new String[readPlayer.length  + 1];
+	    		
+	    		for (int x = 0; x < readPlayer.length; x++)
+	    		{
+    				PlayerInfo[x] = readPlayer[x];
+	    		}
+	    		PlayerInfo[readPlayer.length] = "false";
+	    		PlayerStatus.put(PlayerId, PlayerInfo);
+	    	}
+	    } catch (IOException e) {
+			e.printStackTrace();
+		}
 		getLogger().info("Started Cave of Wonders Plugin.");
     }
 	
@@ -79,6 +100,28 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 	    if (!PlayerDestination.containsKey(player.getName()))
 	    {
 	    	PlayerDestination.put(player.getName(), "");
+	    }
+	    boolean FoundPlayer = false;
+	    for (int x = 0; x < PlayerStatus.size(); x ++)
+	    {
+		    if (PlayerStatus.get(x)[0] == player.getName())
+		    {
+		    	String[] PlayerBasicInfo = PlayerStatus.get(player.getName());
+		    	PlayerBasicInfo[4] = "true";
+		    	PlayerStatus.put(x, PlayerBasicInfo);
+		    	FoundPlayer = true;
+		    	break;
+		    }
+	    }
+	    if (!FoundPlayer)
+	    {
+	    	String[] PlayerBasicInfo = new String[5];
+	    	PlayerBasicInfo[0] = player.getName();
+	    	PlayerBasicInfo[1] = "Peon";
+	    	PlayerBasicInfo[2] = "false";
+	    	PlayerBasicInfo[3] = "";
+	    	PlayerBasicInfo[4] = "true";
+	    	PlayerStatus.put(PlayerStatus.size(), PlayerBasicInfo);
 	    }
 	    player.sendMessage(CoWConfig.get("LoginMessage").replace("[PLAYERNAME]", player.getName()));
 	}
@@ -91,6 +134,15 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 	    if (PlayerDestination.containsKey(player.getName()))
 	    {
 	    	PlayerDestination.remove(player.getName());
+	    }
+	    for (int x = 0; x < PlayerStatus.size(); x++)
+	    {
+		    if (PlayerStatus.get(x)[0] == player.getName())
+		    {
+		    	String[] PlayerInfo = PlayerStatus.get(x);
+		    	PlayerInfo[4] = "false";
+		    	PlayerStatus.put(x, PlayerInfo);
+		    }
 	    }
 	}
 	
@@ -153,233 +205,57 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 	
     @Override public void onDisable() {
         // TODO Insert logic to be performed when the plugin is disabled
+    	DumpPlayerInfo();
     }
     
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
+    	CommandHandler cmdHandler = new CommandHandler();
     	if(cmd.getName().equalsIgnoreCase("ListPortals")){
-			for (int x = 0; x < Portals.size(); x++) {
-				sender.sendMessage(Portals.get(x)[0] + " -> " + Portals.get(x)[4]);
-			}
-    		return true;
+			return cmdHandler.ListPortals(sender);
     	}
     	else if (cmd.getName().equalsIgnoreCase("UpdateLoginMessage")){
-    		String LoginMessage = "";
-    		for (int x = 0; x < args.length; x++)
-    			LoginMessage += args[x] + " ";
-    		LoginMessage.trim();
-    		CoWConfig.put("LoginMessage", LoginMessage);
-			DumpConfig();
-			sender.sendMessage("Login Message set to " + LoginMessage);
-			return true;
+    		return cmdHandler.UpdateLoginMessage(sender, args);
+    	}
+    	else if (cmd.getName().equalsIgnoreCase("Status")){
+    		return cmdHandler.Status(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("AddPortal")){
-    		for (int x = 0; x < Portals.size(); x++)
-    		{
-    			if (Portals.get(x)[0].toUpperCase().equals(args[0].toUpperCase()))
-    			{
-    				sender.sendMessage("Portal Name already exists.");
-    				return false;
-    			}
-    		}
-    		Location PortalLocation;
-    		if (sender instanceof Player)
-    		{
-    			Player player = (Player) sender;
-    			if (args.length > 3)
-    			{
-    				PortalLocation = new Location(player.getWorld(), Double.parseDouble(args[1]), Double.parseDouble(args[2]), Double.parseDouble(args[3]));
-    			}
-    			else
-    			{
-    				PortalLocation = player.getLocation();
-    			}
-    		}
-    		else
-    		{
-	    		if (args.length > 3)
-	    		{
-	    			java.util.List<World> worlds = Bukkit.getWorlds();
-	    			PortalLocation = new Location(worlds.get(0), Double.parseDouble(args[1]), Double.parseDouble(args[2]), Double.parseDouble(args[3]));
-	    		}
-	   		    else
-	    		{
-	   		    	sender.sendMessage("Console must send coordinates.");
-	   		    	return false;
-	    		}
-    		}
-    		String[] PortalInfo = new String[5];
-			PortalInfo[0] = args[0];
-			Integer Converter = (int)PortalLocation.getX();
-			PortalInfo[1] = Converter.toString();
-			Converter = (int)PortalLocation.getY();
-			PortalInfo[2] = Converter.toString();
-			Converter = (int)PortalLocation.getZ();
-			PortalInfo[3] = Converter.toString();
-			if (args.length > 4)
-			{
-				PortalInfo[4] = args[4];
-			}
-			else
-			{
-				PortalInfo[4] = "@@NONE";
-			}
-			Path path = Paths.get(FILE_NAME);
-			
-		    try (BufferedWriter writer = Files.newBufferedWriter(path, ENCODING,StandardOpenOption.APPEND)){
-		    	
-		      writer.append(PortalInfo[0] + "," + PortalInfo[1] + "," + PortalInfo[2] + "," + PortalInfo[3] + "," + PortalInfo[4]);
-		      writer.close();
-		    } catch (IOException e) {
-				e.printStackTrace();
-			}
-			Portals.put(Portals.size(), PortalInfo);
-			sender.sendMessage("Portal " + PortalInfo[0] + " Added.");
-			return true;
+    		return cmdHandler.Status(sender, args);
+    	}
+    	else if (cmd.getName().equalsIgnoreCase("HidePortal")){
+    		return cmdHandler.HidePortal(sender, args);
+    	}
+    	else if (cmd.getName().equalsIgnoreCase("UnHidePortal")){
+    		return cmdHandler.UnHidePortal(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("SetDestination")) {
-    		if (args.length > 1)
-    		{
-    			for (int x = 0; x < Portals.size(); x++)
-    			{
-    				if (Portals.get(x)[0].equalsIgnoreCase(args[0]))
-    				{
-    					String[] portalInformation = Portals.get(x);
-    					portalInformation[4] = args[1];
-    					Portals.put(x, portalInformation);
-    					DumpPortals();
-    					sender.sendMessage("Portal " + portalInformation[0] + " destination set to " + args[1]);
-    					return true;
-    				}
-    			}
-    		}
-    		else
-    		{
-    			sender.sendMessage("Must select Portals");
-    			return false;
-    		}
+    		return cmdHandler.SetDestination(sender, args);
     	}
     	else if(cmd.getName().equalsIgnoreCase("SendPlayer")){
-    		Player sendPlayer;
-    		if (args.length > 3)
-    		{
-    			sendPlayer = Bukkit.getPlayer(args[3]);
-    		} else {
-    			sendPlayer = (Player) sender;
-    		}
-    		if (sendPlayer == null)
-    		{
-    			sender.sendMessage("Player is invalid.");
-    			return false;
-    		}
-    		double X, Y, Z;
-			try
-			{
-				X = Double.parseDouble(args[0]);
-				Y = Double.parseDouble(args[1]);
-				Z = Double.parseDouble(args[2]);
-				Location SendLocation = new Location(sendPlayer.getWorld(), X, Y, Z);
-				sendPlayer.teleport(SendLocation);
-			}
-			catch (NumberFormatException e)
-			{
-				sender.sendMessage("Invalid Coordinates");
-				return false;
-			}
-			sender.sendMessage(sendPlayer.getName() + " set to " + X + " " + Y + " " + Z);
-    		return true;	
-    		}
+    		return cmdHandler.SendPlayer(sender, args);	
+    	}
     	else if (cmd.getName().equalsIgnoreCase("RemovePortal")){
-    		if (args.length > 0)
-    		{
-	    		for (int x = 0; x < Portals.size(); x++)
-	    		{
-					if (Portals.get(x)[0].equalsIgnoreCase(args[0]))
-					{
-						Portals.remove(x);
-						DumpPortals();
-						sender.sendMessage("Portal " + args[0] + " removed.");
-						return true;
-					}
-	    		}
-    		} 
-    		return false;
+    		return cmdHandler.RemovePortal(sender, args);
+    	}
+    	else if (cmd.getName().equalsIgnoreCase("afk"))
+    	{
+    		return cmdHandler.AFK(sender);
+    	}
+    	else if (cmd.getName().equalsIgnoreCase("Who"))
+    	{
+    		return cmdHandler.Who(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("PortalInformation"))
     	{
-    		if (args.length > 0)
-    		{
-    			for (int x = 0; x < Portals.size(); x++)
-    			{
-    				if (Portals.get(x)[0].equalsIgnoreCase(args[0]))
-    				{
-    					sender.sendMessage("Portal Information");
-    				    sender.sendMessage("------------------");
-    				    sender.sendMessage("Name:        " + Portals.get(x)[0]);
-    				    sender.sendMessage("Coordinates: " + Portals.get(x)[1] + " " + Portals.get(x)[2] + " " + Portals.get(x)[3]);
-    				    sender.sendMessage("Destination: " + Portals.get(x)[4]);
-    					return true;
-    				}
-    			}
-    			sender.sendMessage("Portal not found.");
-    			return false;
-    		}
-    		else
-    		{
-    			sender.sendMessage("You must select a portal.");
-    			return false;
-    		}
+    		return cmdHandler.PortalInformation(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("SendToPortal")){
-    		Player _sendPlayer;
-    		if (args.length > 1)
-    		{
-    			_sendPlayer = Bukkit.getPlayer(args[1]);
-    		}
-    		else
-    		{
-	    		if (!(sender instanceof Player)) 
-	    		{
-	    			sender.sendMessage("You must select a player.");
-	    			return false;
-	    		}
-	    		else
-	    		{
-	    			_sendPlayer = (Player) sender;
-	    		}
-    		}
-    		if (_sendPlayer != null)
-    		{
-    			if (args.length > 0)
-    			{
-    				for (int x = 0; x < Portals.size(); x++)
-    				{
-    					
-    					if (Portals.get(x)[0].toUpperCase().equals(args[0].toUpperCase()))
-    					{
-    						try
-    						{
-    							double X = Double.parseDouble(Portals.get(x)[1]);
-    							double Y = Double.parseDouble(Portals.get(x)[2]);
-    							double Z = Double.parseDouble(Portals.get(x)[3]);
-    							Location SendLocation = new Location(_sendPlayer.getWorld(), X, Y, Z);
-    							_sendPlayer.teleport(SendLocation);
-    							sender.sendMessage(_sendPlayer.getName() + " sent to portal " + Portals.get(x)[0]);
-    							return true;
-    						}
-    						catch (NumberFormatException e)
-    						{
-    							getLogger().info(e.getMessage());
-    						}
-    					}
-    				}
-    				sender.sendMessage("Unable to find Portal");
-    				return false;
-    			}
-    		}
+    		return cmdHandler.SendToPortal(sender, args);
     	}
     	return false; 
     }
-    private void DumpPortals()
+    
+    protected static void DumpPortals()
     {
     	Path path = Paths.get(FILE_NAME);
 	    try (BufferedWriter writer = Files.newBufferedWriter(path, ENCODING)){
@@ -387,7 +263,7 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 	    	{
 	    		if (x != 0)
 	    			writer.newLine();
-	    		writer.append(Portals.get(x)[0] + "," + Portals.get(x)[1] + "," + Portals.get(x)[2] + "," + Portals.get(x)[3] + "," + Portals.get(x)[4]);
+	    		writer.append(Portals.get(x)[0] + "," + Portals.get(x)[1] + "," + Portals.get(x)[2] + "," + Portals.get(x)[3] + "," + Portals.get(x)[4] + "," + Portals.get(x)[5]);
 	    	}
 	      writer.close();
 	    } catch (IOException e) {
@@ -395,7 +271,7 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 			e.printStackTrace();
 		}
     }
-    private void DumpConfig()
+    protected static void DumpConfig()
     {
     	Path path = Paths.get(ConfigFile);
     	Boolean FirstRun = true;
@@ -406,6 +282,36 @@ public final class CaveOfWonders extends JavaPlugin implements Listener {
 	    	else
 	    		FirstRun = false;
 			writer.append("LoginMessage=" + CoWConfig.get("LoginMessage"));
+			writer.close();
+	    } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    private void DumpPlayerInfo()
+    {
+    	Path path = Paths.get(PlayerFile);
+    	Boolean FirstRun = true;
+	    try (BufferedWriter writer = Files.newBufferedWriter(path, ENCODING))
+	    {
+	    	for (int x = 0; x < PlayerStatus.size(); x++)
+	    	{
+		    	if (!FirstRun)
+		    		writer.newLine();
+		    	else
+		    		FirstRun = false;
+		    	String[] Values = PlayerStatus.get(x);
+		    	String SendMe = "";
+		    	for (int y = 0; y < Values.length; y++)
+		    	{
+		    		if (SendMe != "")
+		    			SendMe += "~";
+		    		 SendMe += Values[y];		    	}
+		    	if (SendMe != "")
+		    		writer.append(SendMe);
+		    	else
+		    		FirstRun = true;
+	    	}
 			writer.close();
 	    } catch (IOException e) {
 			// TODO Auto-generated catch block
