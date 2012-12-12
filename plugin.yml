@@ -66,4 +66,9 @@ commands:
       description: Shows a specific status
       usage: /status Status message
       permission: CaveOfWonders.Status
-      permission-message: You don't have Status permissions          
+      permission-message: You don't have Status permissions
+   title:
+      description: Changes players title.
+      usage: /title PlayerName TitleName
+      permission: CaveOfWonders.Title
+      permission-message: You don't have Title permissions

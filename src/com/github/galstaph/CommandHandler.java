@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -56,9 +57,12 @@ public final class CommandHandler extends CaveOfWonders
 			Player player = (Player) sender;
 			String PlayerMessage = "";
     		if (args.length > 0)
-    		{
     			PlayerMessage = args[0];
-    		}
+			if (PlayerMessage.length()== 0)
+			{
+				sender.sendMessage("You must select a message.");
+				return false;
+			}
     		if (PlayerMessage.contains("~"))
     		{
     			sender.sendMessage("Cannot use a ~ in your status.");
@@ -68,7 +72,7 @@ public final class CommandHandler extends CaveOfWonders
     		{
 	    		for (int x = 0; x < PlayerStatus.size(); x++)
     			{
-    				if (PlayerStatus.get(x)[0] == player.getName())
+    				if (PlayerStatus.get(x)[0].equalsIgnoreCase(player.getName()))
     				{
     					String PlayerInfo[] = PlayerStatus.get(x);
     					PlayerInfo[3] = PlayerMessage;
@@ -364,18 +368,18 @@ public final class CommandHandler extends CaveOfWonders
 			Player player = (Player) sender;
 			for (int x = 0; x < PlayerStatus.size(); x++)
 			{
-				if (PlayerStatus.get(x)[0] == player.getName())
+				if (PlayerStatus.get(x)[0].equalsIgnoreCase(player.getName()))
 				{
 					String[] PlayerInfo = PlayerStatus.get(x);
-					if (Boolean.parseBoolean(PlayerInfo[2]))
+					if (!Boolean.parseBoolean(PlayerInfo[2]))
 					{
 						Bukkit.getServer().broadcastMessage(player.getName() + " has gone AFK.");
-						PlayerInfo[2] = "false";
+						PlayerInfo[2] = "true";
 					}
 					else
 					{
 						Bukkit.getServer().broadcastMessage(player.getName() + " has returned.");
-						PlayerInfo[2] = "true";
+						PlayerInfo[2] = "false";
 					}
 					return true;
 				}
@@ -417,7 +421,7 @@ public final class CommandHandler extends CaveOfWonders
 					else
 						Offline = " - Offline";
 				}
-				sender.sendMessage(PlayerInfo[0] + AFK + " '" + PlayerInfo[1] + "' \"" + PlayerInfo[3] + "\"" + Offline);
+				sender.sendMessage(ChatColor.WHITE + PlayerInfo[0] + ChatColor.DARK_GREEN + AFK + ChatColor.GRAY + " '" + ChatColor.RED + PlayerInfo[1] + ChatColor.GRAY + "' \"" + ChatColor.DARK_PURPLE + PlayerInfo[3] + ChatColor.GRAY + "\"" + ChatColor.GOLD + Offline);
 			}
 		}
 		return true;
@@ -515,6 +519,47 @@ public final class CommandHandler extends CaveOfWonders
 				return false;
 			}
 		}
+		return false;
+	}
+	public boolean Title(CommandSender sender, String[] args)
+	{
+		if (sender instanceof Player)
+		{
+			Player player = (Player) sender;
+			if (!player.isOp())
+			{
+				sender.sendMessage("This is an OP only command.");
+				return false;
+			}
+		}
+		if (args.length < 1)
+		{
+			sender.sendMessage("You must select a player.");
+			return false;
+		}
+		else if (args.length < 2)
+		{
+			sender.sendMessage("You must select a title.");
+			return false;
+		}
+		for (int x = 0; x < PlayerStatus.size(); x++)
+		{
+			if (PlayerStatus.get(x)[0].equalsIgnoreCase(args[0]))
+			{
+				String[] PlayerInfo = PlayerStatus.get(x);
+				String PlayerTitle = "";
+				for (int y = 1; y < args.length; y++)
+				{
+					if (PlayerTitle.length() > 0)
+						PlayerTitle += " ";
+					PlayerTitle += args[y];
+				}
+				PlayerInfo[1] = PlayerTitle;
+				sender.sendMessage(args[0] + "'s Title changed to " + PlayerTitle);
+				return true;
+			}
+		}
+		sender.sendMessage("Player " + args[0] + " not found.");
 		return false;
 	}
 	

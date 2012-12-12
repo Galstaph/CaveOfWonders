@@ -37,7 +37,6 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 	protected static HashMap<Integer, String[]> Portals;
 	
 	@Override public void onEnable(){
-        // TODO Insert logic to be performed when the plugin is enabled
 		getLogger().info("Starting up Cave of Wonders Plugin.");
 		
 		getServer().getPluginManager().registerEvents(this, this);
@@ -52,10 +51,9 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 	    	  readPortals = scanner.nextLine().split(",");
 	    	  Portals.put(Portals.size(), readPortals);
 	    	  getLogger().info("Adding Portal - " + readPortals[0] + " -> " + readPortals[4]);
-	    	  //getLogger().info(scanner.nextLine());
 	      }      
 	    } catch (IOException e) {
-			// TODO Create File
+	    	
 		getLogger().info(e.getMessage());	
 		}
 	    CoWConfig = new LinkedHashMap<String, String>();
@@ -102,11 +100,11 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 	    	PlayerDestination.put(player.getName(), "");
 	    }
 	    boolean FoundPlayer = false;
-	    for (int x = 0; x < PlayerStatus.size(); x ++)
+	    for (int x = 0; x < PlayerStatus.size(); x++)
 	    {
-		    if (PlayerStatus.get(x)[0] == player.getName())
+		    if (PlayerStatus.get(x)[0].equalsIgnoreCase((player.getName())))
 		    {
-		    	String[] PlayerBasicInfo = PlayerStatus.get(player.getName());
+		    	String[] PlayerBasicInfo = PlayerStatus.get(x);
 		    	PlayerBasicInfo[4] = "true";
 		    	PlayerStatus.put(x, PlayerBasicInfo);
 		    	FoundPlayer = true;
@@ -119,14 +117,12 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 	    	PlayerBasicInfo[0] = player.getName();
 	    	PlayerBasicInfo[1] = "Peon";
 	    	PlayerBasicInfo[2] = "false";
-	    	PlayerBasicInfo[3] = "";
+	    	PlayerBasicInfo[3] = "Wouldn't you like to be a Pepper too?";
 	    	PlayerBasicInfo[4] = "true";
 	    	PlayerStatus.put(PlayerStatus.size(), PlayerBasicInfo);
 	    }
 	    player.sendMessage(CoWConfig.get("LoginMessage").replace("[PLAYERNAME]", player.getName()));
 	}
-	
-	
 	
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent e) {
@@ -137,7 +133,7 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 	    }
 	    for (int x = 0; x < PlayerStatus.size(); x++)
 	    {
-		    if (PlayerStatus.get(x)[0] == player.getName())
+		    if (PlayerStatus.get(x)[0] .equalsIgnoreCase(player.getName()))
 		    {
 		    	String[] PlayerInfo = PlayerStatus.get(x);
 		    	PlayerInfo[4] = "false";
@@ -220,7 +216,7 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
     		return cmdHandler.Status(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("AddPortal")){
-    		return cmdHandler.Status(sender, args);
+    		return cmdHandler.AddPortal(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("HidePortal")){
     		return cmdHandler.HidePortal(sender, args);
@@ -237,20 +233,20 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
     	else if (cmd.getName().equalsIgnoreCase("RemovePortal")){
     		return cmdHandler.RemovePortal(sender, args);
     	}
-    	else if (cmd.getName().equalsIgnoreCase("afk"))
-    	{
+    	else if (cmd.getName().equalsIgnoreCase("afk")){
     		return cmdHandler.AFK(sender);
     	}
-    	else if (cmd.getName().equalsIgnoreCase("Who"))
-    	{
+    	else if (cmd.getName().equalsIgnoreCase("Who")){
     		return cmdHandler.Who(sender, args);
     	}
-    	else if (cmd.getName().equalsIgnoreCase("PortalInformation"))
-    	{
+    	else if (cmd.getName().equalsIgnoreCase("PortalInformation")){
     		return cmdHandler.PortalInformation(sender, args);
     	}
     	else if (cmd.getName().equalsIgnoreCase("SendToPortal")){
     		return cmdHandler.SendToPortal(sender, args);
+    	}
+    	else if (cmd.getName().equalsIgnoreCase("Title")){
+    		return cmdHandler.Title(sender,args);
     	}
     	return false; 
     }
@@ -271,6 +267,7 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 			e.printStackTrace();
 		}
     }
+    
     protected static void DumpConfig()
     {
     	Path path = Paths.get(ConfigFile);
@@ -288,6 +285,7 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 			e.printStackTrace();
 		}
     }
+
     private void DumpPlayerInfo()
     {
     	Path path = Paths.get(PlayerFile);
@@ -302,7 +300,7 @@ public class CaveOfWonders extends JavaPlugin implements Listener {
 		    		FirstRun = false;
 		    	String[] Values = PlayerStatus.get(x);
 		    	String SendMe = "";
-		    	for (int y = 0; y < Values.length; y++)
+		    	for (int y = 0; y < Values.length - 1; y++)
 		    	{
 		    		if (SendMe != "")
 		    			SendMe += "~";
